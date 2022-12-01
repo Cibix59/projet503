@@ -1,4 +1,3 @@
-package Fiche_01_Sockets_mode_connecte;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.InputStreamReader;
@@ -11,7 +10,7 @@ import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Scanner;
 
-public class ClientMarcheTCP {
+public class ClientMarcheGros {
 
     public static final int portEcoute = 5001;
 

@@ -1,5 +1,3 @@
-package codeSuivi;
-
 import java.util.GregorianCalendar;
 
 import org.json.JSONArray;
