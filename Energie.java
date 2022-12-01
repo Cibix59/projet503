@@ -1,6 +1,9 @@
+
+import java.io.Serializable;
+
 import org.json.JSONObject;
 
-public class Energie {
+public class Energie implements Serializable {
     private CodeDeSuivi codeSuivi;
     private int quantite;
     private String typeEnergie;
@@ -26,6 +29,10 @@ public class Energie {
         String typeEnergie = json.getString("typeEnergie");
         return new Energie(codeSuivi.toString(), quantite, typeEnergie);
     }
+    public String toString() {
+        return "Energie : " + this.codeSuivi.toString() + " " + this.quantite + " " + this.typeEnergie;
+    }
+
 
 
     
