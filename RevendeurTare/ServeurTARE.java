@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpContext;
 import java.net.InetSocketAddress;
 
 public class ServeurTARE {
-
     public static void main(String[] args) {
         HttpServer serveur = null;
         try {

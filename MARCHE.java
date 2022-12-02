@@ -16,14 +16,17 @@ import org.json.JSONObject;
 
 public class MARCHE {
 
-    private static String[] offres;
+    private static Energie[] offres = new Energie[100];
+    public static int nombreDoffres = 0;
 
     public static int portEcoute = 2025;
 
     public static int portEcouter = 2026;
 
     public static int portEcoutePONE = 3031;
+    public static int portEcouteTARE = 3032;
     public static int portEcouteAMI = 5001;
+
 
     public static void main(String[] args) {
 
@@ -57,6 +60,12 @@ public class MARCHE {
 
             String reponseAMI = demandeConfirmationAddEnergieAMI(energie);
 
+            // si l'AMI confirme, l'energie est ajoutée au marché
+            if (reponseAMI.equals("Valide")) {
+                offres[nombreDoffres] = energie;
+                nombreDoffres++;
+            }
+
         } catch (ClassNotFoundException e) {
             System.err.println("Objet reçu non reconnu : " + e);
             System.exit(0);
@@ -67,59 +76,65 @@ public class MARCHE {
 
         socket.close();
 
-        /*
-         * PARTIE GESTION REQUETE (style demande des energies sur le marché)
-         * // Création de la socket
-         * DatagramSocket socket = null;
-         * 
-         * try {
-         * socket = new DatagramSocket(portEcoute);
-         * } catch (SocketException e) {
-         * System.err.println("Erreur lors de la création de la socket : " + e);
-         * System.exit(0);
-         * }
-         * 
-         * // Création du message
-         * 
-         * byte[] tampon = new byte[1024];
-         * 
-         * DatagramPacket msg = new DatagramPacket(tampon, tampon.length);
-         * 
-         * // Lecture du message du client
-         * try {
-         * socket.receive(msg);
-         * String texte = new String(msg.getData(), 0, msg.getLength());
-         * JSONObject obj = new JSONObject(texte);
-         * switch (obj.getString("requete")) {
-         * case "inscription":
-         * case "miseEnVente":
-         * case "retrait":
-         * case "consultation":
-         * try {
-         * socket.send(getDataOffres());
-         * } catch (IOException e) {
-         * System.err.println("Erreur lors de l'envoi du message : " + e);
-         * System.exit(0);
-         * }
-         * 
-         * default:
-         * break;
-         * }
-         * 
-         * } catch (IOException e) {
-         * System.err.println("Erreur lors de la réception du message : " + e);
-         * System.exit(0);
-         * }
-         * 
-         * // Fermeture de la socket
-         * 
-         * socket.close();
-         */
+        ouvreSocketTARE();
 
     }
 
-    public static String demandeConfirmationAddEnergieAMI(Energie energie){
-        //se connecte en TCP au serveur AMI pour lui faire verifier un objet Energie
+    private static void ouvreSocketTARE() {
+
+        // PARTIE GESTION REQUETE DU TARE(style demande des energies sur le marché)
+        // Création de la socket
+        DatagramSocket socket = null;
+
+        try {
+            socket = new DatagramSocket(portEcouteTARE);
+        } catch (SocketException e) {
+            System.err.println("Erreur lors de la création de la socket : " + e);
+            System.exit(0);
+        }
+
+        // Création du message
+
+        byte[] tampon = new byte[1024];
+
+        DatagramPacket msg = new DatagramPacket(tampon, tampon.length);
+
+        // Lecture du message du TARE
+        try {
+            socket.receive(msg);
+            String texte = new String(msg.getData(), 0, msg.getLength());
+            JSONObject obj = new JSONObject(texte);
+            switch (obj.getString("requete")) {
+                case "inscription":
+                case "miseEnVente":
+                case "retrait":
+                case "consultation":
+                    try {
+                        socket.send(getDataOffres());
+                    } catch (IOException e) {
+                        System.err.println("Erreur lors de l'envoi du message : " + e);
+                        System.exit(0);
+                    }
+                    break;
+                case "achat":
+                    break;
+                default:
+                    break;
+            }
+
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la réception du message : " + e);
+            System.exit(0);
+        }
+
+        // Fermeture de la socket
+
+        socket.close();
+
+    }
+
+    public static String demandeConfirmationAddEnergieAMI(Energie energie) {
+        // se connecte en TCP au serveur AMI pour lui faire verifier un objet Energie
 
         // Création de la socket
         Socket socket = null;
@@ -146,9 +161,9 @@ public class MARCHE {
 
         // Envoi de la nouvelle energie à faire verifier sous forme de JSON
         System.out.println("Envoi: " + energie.toJson().toString());
-        output.println("1"+energie.toJson().toString());
+        output.println("1" + energie.toJson().toString());
 
-        String message="";
+        String message = "";
         // Lecture de 'confirmation'
         try {
             message = input.readLine();
@@ -166,12 +181,12 @@ public class MARCHE {
             System.err.println("Erreur lors de la fermeture des flux et de la socket : " + e);
             System.exit(0);
         }
-        
-        //renvois la reponse de l'AMI
+
+        // renvois la reponse de l'AMI
         return message;
     }
 
-    public static String[] getOffres() {
+    public static Energie[] getOffres() {
         return offres;
     }
 
