@@ -27,7 +27,6 @@ public class MARCHE {
     public static int portEcouteTARE = 3032;
     public static int portEcouteAMI = 5001;
 
-
     public static void main(String[] args) {
 
         // Création de la socket
@@ -102,15 +101,43 @@ public class MARCHE {
         // Lecture du message du TARE
         try {
             socket.receive(msg);
+
             String texte = new String(msg.getData(), 0, msg.getLength());
+            socket.close();
             JSONObject obj = new JSONObject(texte);
+
+            // Creation du socket de retour
+            DatagramSocket socketRetour = null;
+            try {
+                socketRetour = new DatagramSocket();
+            } catch (SocketException e) {
+                System.err.println("Erreur lors de la création de la socket : " + e);
+                System.exit(0);
+            }
+
+            // Création du message
             switch (obj.getString("requete")) {
                 case "inscription":
                 case "miseEnVente":
                 case "retrait":
                 case "consultation":
+                    System.out.println("consultation demandée");
                     try {
-                        socket.send(getDataOffres());
+                        System.out.println("avant envois infos");
+
+                        byte[] donnees = "testRetouVersTARE".getBytes();
+                        InetAddress adresse = InetAddress.getByName("localhost");
+                        DatagramPacket msgRetour = new DatagramPacket(donnees, donnees.length,
+                                adresse, portEcouteTARE);
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        socketRetour.send(msgRetour);
+
+                        /* socket.send(getDataOffres()); */
+                        System.out.println("apres envois infos");
                     } catch (IOException e) {
                         System.err.println("Erreur lors de l'envoi du message : " + e);
                         System.exit(0);
@@ -121,6 +148,7 @@ public class MARCHE {
                 default:
                     break;
             }
+            socketRetour.close();
 
         } catch (IOException e) {
             System.err.println("Erreur lors de la réception du message : " + e);
@@ -128,8 +156,6 @@ public class MARCHE {
         }
 
         // Fermeture de la socket
-
-        socket.close();
 
     }
 
@@ -193,10 +219,12 @@ public class MARCHE {
     public static DatagramPacket getDataOffres() {
         DatagramPacket msgr = null;
         try {
-            InetAddress adresser = InetAddress.getByName(null);
+            InetAddress adresser = InetAddress.getByName("localhost");
             String messager = getOffres().toString();
+            System.out.println("envois de : " + messager);
+            /* System.out.println("envois de : test"); */
             byte[] tamponr = messager.getBytes();
-            msgr = new DatagramPacket(tamponr, tamponr.length, adresser, portEcouter);
+            msgr = new DatagramPacket(tamponr, tamponr.length, adresser, portEcouteTARE);
 
         } catch (UnknownHostException e) {
             System.err.println("Erreur lors de la création du message : " + e);
