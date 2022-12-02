@@ -1,4 +1,4 @@
-
+package AMI.echangeEnergieTMP_AES;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.InputStreamReader;
@@ -6,10 +6,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Random;
-import java.util.Scanner;
+import org.json.JSONObject;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -20,7 +21,7 @@ import javax.crypto.IllegalBlockSizeException;
 import java.security.InvalidKeyException;
 
 /**
- * Classe correspondant à un client TCP.
+ * Classe correspondant à un serveur TCP.
  * Le client envoie la chaine 'Bonjour' et lit une réponse de la part du
  * serveur.
  * Le client envoie ensuite la chaine 'Au revoir' et lit une réponse.
@@ -28,20 +29,26 @@ import java.security.InvalidKeyException;
  * 
  * @author Cyril Rabat
  */
-public class ClientTCP {
+public class ServeurTCP {
 
     public static final int portEcoute = 5001;
 
     public static void main(String[] args) {
-        // Création de la socket
-        Socket socket = null;
+        // Création de la socket serveur
+        ServerSocket socketServeur = null;
         try {
-            socket = new Socket("localhost", portEcoute);
-        } catch (UnknownHostException e) {
-            System.err.println("Erreur sur l'hôte : " + e);
-            System.exit(0);
+            socketServeur = new ServerSocket(portEcoute);
         } catch (IOException e) {
             System.err.println("Création de la socket impossible : " + e);
+            System.exit(0);
+        }
+
+        // Attente d'une connexion d'un client
+        Socket socketClient = null;
+        try {
+            socketClient = socketServeur.accept();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'attente d'une connexion : " + e);
             System.exit(0);
         }
 
@@ -49,77 +56,68 @@ public class ClientTCP {
         BufferedReader input = null;
         PrintWriter output = null;
         try {
-            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+            input = new BufferedReader(new InputStreamReader(socketClient.getInputStream()));
+            output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socketClient.getOutputStream())), true);
         } catch (IOException e) {
             System.err.println("Association des flux impossible : " + e);
             System.exit(0);
         }
 
-        Energie energie = new Energie("000100000000000100101000100001", 10, "charbon");
-        
-        String messageDecode = energie.toJson().toString();
-
-        // Envoi de message crypté
-
-        byte[] message = genererMessage(messageDecode,"motDePasseTresBI");
-
-        String messsageCrypt = java.util.Base64.getEncoder().encodeToString(message);
-
-        System.out.println("Envoi: " + new String(messsageCrypt));
-        output.println(messsageCrypt);
-
-        String retour="";
-        // Lecture de 'confirmation'
+        /* byte[] message; */
+        String message="";
+        // Lecture du message crypté
         try {
-            retour = input.readLine();
+            message = input.readLine();
+            System.out.println("recu "+ message);
         } catch (IOException e) {
             System.err.println("Erreur lors de la lecture : " + e);
             System.exit(0);
         }
-        System.out.println("Lu: " + retour);
+
+        String messageDecode = decrypt( message, "motDePasseTresBI");
+
+        
+        JSONObject jsonObject = new JSONObject(messageDecode);
+        Energie energieRecue = Energie.FromJson(jsonObject);
+        System.out.println("Lu: " + energieRecue.toString());
+
+
 
         // Envoi de 'Au revoir'
-        retour = "Au revoir";
-        System.out.println("Envoi: " + retour);
-        output.println(retour);
 
-        // Lecture de 'Au revoir'
-        try {
-            retour = input.readLine();
-        } catch (IOException e) {
-            System.err.println("Erreur lors de la lecture : " + e);
-            System.exit(0);
-        }
-        System.out.println("Lu: " + retour);
+        System.out.println("Envoi: au revoir");
+        output.println("au revoir");
 
-        // Fermeture des flux et de la socket
+        // Fermeture des flux et des sockets
         try {
             input.close();
             output.close();
-            socket.close();
+            socketClient.close();
+            socketServeur.close();
         } catch (IOException e) {
-            System.err.println("Erreur lors de la fermeture des flux et de la socket : " + e);
+            System.err.println("Erreur lors de la fermeture des flux et des sockets : " + e);
             System.exit(0);
         }
     }
 
-    public static byte[] genererMessage(String message,String motDePasse) {
-        // Chiffrement du message
-        System.out.println("Message origine   : " + message);
+    public static String decrypt(String message, String motDePasse) {
+        byte[] messageByte = java.util.Base64.getDecoder().decode(message);
+        // Dechiffrement du message
         SecretKeySpec specification = new SecretKeySpec(motDePasse.getBytes(), "AES");
         byte[] bytes = null;
-
         try {
-            Cipher chiffreur = Cipher.getInstance("AES");
-            chiffreur.init(Cipher.ENCRYPT_MODE, specification);
-            bytes = chiffreur.doFinal(message.getBytes());
+            Cipher dechiffreur = Cipher.getInstance("AES");
+            dechiffreur.init(Cipher.DECRYPT_MODE, specification);
+            bytes = dechiffreur.doFinal(messageByte);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException
                 | BadPaddingException e) {
             System.err.println("Erreur lors du chiffrement : " + e);
             System.exit(0);
         }
-        return bytes;
+
+        System.out.println("Message déchiffré : " + new String(bytes));
+
+        return new String(bytes);
     }
 
 }

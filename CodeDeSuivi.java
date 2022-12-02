@@ -1,7 +1,9 @@
+
+import java.io.Serializable;
 import java.util.*;
 import org.json.JSONObject;
 
-public class CodeDeSuivi  implements Comparable<CodeDeSuivi> {
+public class CodeDeSuivi  implements Comparable<CodeDeSuivi>, Serializable {
     
     
     private String lieu;
