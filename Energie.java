@@ -79,7 +79,11 @@ public class Energie implements Serializable {
     }
 
     public String toString() {
-        return "Energie : " + this.codeSuivi.toString() + " " + this.quantite + " " + this.typeEnergie + this.prix + " " + this.pays;
+        return "Energie : " + this.codeSuivi.toString() + " " + this.quantite + " " + this.typeEnergie + " " + this.prix + " " + this.pays;
+    }
+
+    public String toStringLimite(){
+        return  this.typeEnergie + " ("+this.pays+") : "+ this.quantite + " unites; prix : " +   this.prix + " euros "  ;
     }
 
 }

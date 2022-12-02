@@ -1,9 +1,12 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.DatagramSocket;
@@ -122,26 +125,8 @@ public class MARCHE {
                 case "retrait":
                 case "consultation":
                     System.out.println("consultation demandée");
-                    try {
-                        System.out.println("avant envois infos");
+                    envoisListeEnergies(socketRetour);
 
-                        byte[] donnees = "testRetouVersTARE".getBytes();
-                        InetAddress adresse = InetAddress.getByName("localhost");
-                        DatagramPacket msgRetour = new DatagramPacket(donnees, donnees.length,
-                                adresse, portEcouteTARE);
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        socketRetour.send(msgRetour);
-
-                        /* socket.send(getDataOffres()); */
-                        System.out.println("apres envois infos");
-                    } catch (IOException e) {
-                        System.err.println("Erreur lors de l'envoi du message : " + e);
-                        System.exit(0);
-                    }
                     break;
                 case "achat":
                     break;
@@ -155,8 +140,42 @@ public class MARCHE {
             System.exit(0);
         }
 
-        // Fermeture de la socket
+    }
 
+    private static void envoisListeEnergies(DatagramSocket socketRetour) {
+        try {
+          
+
+
+            String listeTMP = getListeOffres();
+            System.out.println("avant envois infos \n"+listeTMP);
+            byte[] donnees = listeTMP.getBytes();
+            InetAddress adresse = InetAddress.getByName("localhost");
+            DatagramPacket msgRetour = new DatagramPacket(donnees, donnees.length,
+                    adresse, portEcouteTARE);
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            socketRetour.send(msgRetour);
+
+            /* socket.send(getDataOffres()); */
+            System.out.println("apres envois infos");
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'envoi du message : " + e);
+            System.exit(0);
+        }
+    }
+
+    private static String getListeOffres() {
+        String tmp="";
+        for ( int i =0;i<nombreDoffres;i++) {
+            System.out.println("position : "+i);
+            System.out.println(offres[i].toStringLimite());
+            tmp+=offres[i].toStringLimite();
+        }
+        return tmp;
     }
 
     public static String demandeConfirmationAddEnergieAMI(Energie energie) {
