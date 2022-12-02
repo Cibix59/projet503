@@ -31,7 +31,7 @@ public class ClientPONE_UDP {
         }
 
         // Création de l'energie
-        Energie energie = new Energie("000100000000000100101000100001", 10, "charbon");
+        Energie energie = new Energie("000100000000000100101000100001", 10, "charbon",150,"France");
 
         // Transformation en tableau d'octets
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

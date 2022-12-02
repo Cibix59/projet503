@@ -10,6 +10,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 public class ServeurAMI {
 
@@ -57,11 +59,17 @@ public class ServeurAMI {
 
         // recupere quel est le type d'information qui est recu
         String typeInfo = message.substring(0, 1);
+
         switch (typeInfo) {
             case "1":
                 // Envoi de validité
-                String val = "";
-                val = validite(message.substring(2));
+
+
+                // transforme le string en json en energie
+                JSONObject json = new JSONObject(message.substring(1));
+                Energie energie = Energie.FromJson(json);
+
+                String val = validite(energie);
                 System.out.println("Envoi: " + val);
                 output.println(val);
                 break;
@@ -96,10 +104,11 @@ public class ServeurAMI {
         }
     }
 
-    public static String validite(String message) {
-        int prix = Integer.parseInt(message);
+    public static String validite(Energie energie) {
+        // todo : verifier que toutes les informations sont ok
+        //todo : verifier que ca correspond au code suivi (faire une methode utilitaire pour ça, qui verifie avec une table de correspondance ce qui est possible)
         String valid = "Invalide";
-        if (prix < 1000) {
+        if (energie.getPrix() < 1000) {
             valid = "Valide";
         }
         return valid;

@@ -1,10 +1,16 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.SocketException;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import org.json.JSONObject;
 
@@ -17,6 +23,7 @@ public class MARCHE {
     public static int portEcouter = 2026;
 
     public static int portEcoutePONE = 3031;
+    public static int portEcouteAMI = 5001;
 
     public static void main(String[] args) {
 
@@ -47,6 +54,9 @@ public class MARCHE {
             Energie energie = (Energie) ois.readObject();
 
             System.out.println("Recu : " + energie.toString());
+
+            String reponseAMI = demandeConfirmationAddEnergieAMI(energie);
+
         } catch (ClassNotFoundException e) {
             System.err.println("Objet reçu non reconnu : " + e);
             System.exit(0);
@@ -106,6 +116,59 @@ public class MARCHE {
          * socket.close();
          */
 
+    }
+
+    public static String demandeConfirmationAddEnergieAMI(Energie energie){
+        //se connecte en TCP au serveur AMI pour lui faire verifier un objet Energie
+
+        // Création de la socket
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", portEcouteAMI);
+        } catch (UnknownHostException e) {
+            System.err.println("Erreur sur l'hôte : " + e);
+            System.exit(0);
+        } catch (IOException e) {
+            System.err.println("Création de la socket impossible : " + e);
+            System.exit(0);
+        }
+
+        // Association d'un flux d'entrée et de sortie
+        BufferedReader input = null;
+        PrintWriter output = null;
+        try {
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        } catch (IOException e) {
+            System.err.println("Association des flux impossible : " + e);
+            System.exit(0);
+        }
+
+        // Envoi de la nouvelle energie à faire verifier sous forme de JSON
+        System.out.println("Envoi: " + energie.toJson().toString());
+        output.println("1"+energie.toJson().toString());
+
+        String message="";
+        // Lecture de 'confirmation'
+        try {
+            message = input.readLine();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la lecture : " + e);
+            System.exit(0);
+        }
+        System.out.println("Lu: " + message);
+        // Fermeture des flux et de la socket
+        try {
+            input.close();
+            output.close();
+            socket.close();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la fermeture des flux et de la socket : " + e);
+            System.exit(0);
+        }
+        
+        //renvois la reponse de l'AMI
+        return message;
     }
 
     public static String[] getOffres() {
