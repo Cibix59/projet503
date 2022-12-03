@@ -15,13 +15,16 @@ import java.net.SocketException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import org.json.JSONObject;
 
 public class MARCHE {
 
-    private static Energie[] offres = new Energie[100];
+    // private static Energie[] offres = new Energie[100];
+    private static ArrayList<Energie> offres = new ArrayList<Energie>();
+
     public static int nombreDoffres = 0;
 
     public static int portEcoute = 2025;
@@ -93,7 +96,7 @@ public class MARCHE {
 
             // si l'AMI confirme, l'energie est ajoutée au marché
             if (reponseAMI.equals("Valide")) {
-                offres[nombreDoffres] = energie;
+                offres.add(energie);
                 nombreDoffres++;
             }
 
@@ -158,10 +161,11 @@ public class MARCHE {
                     // demande confirmation à l'AMI
                     String numEnergie = obj.getString("numEnergie");
                     confirmationAchat(numEnergie);
+                    // envois l'energie au TARE
+                    envoisBlocEnergie(socketRetour, numEnergie);
                     // puis retire l'energie tu tableau et decremente le nbr d'offres
-                    
-                    // offres[Integer.parseInt(numEnergie)].remove();
-
+                    offres.remove(Integer.parseInt(numEnergie) - 1);
+                    nombreDoffres--;
                     break;
                 default:
                     break;
@@ -175,13 +179,43 @@ public class MARCHE {
 
     }
 
+    private static void envoisBlocEnergie(DatagramSocket socketRetour, String numEnergie) {
+        try {
+            Energie energie = offres.get(Integer.parseInt(numEnergie) - 1);
+
+            // Transformation en tableau d'octets
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(energie);
+            } catch (IOException e) {
+                System.err.println("Erreur lors de la sérialisation : " + e);
+                System.exit(0);
+            }
+
+            byte[] donnees = baos.toByteArray();
+            InetAddress adresse = InetAddress.getByName("localhost");
+            DatagramPacket msgRetour = new DatagramPacket(donnees, donnees.length,
+                    adresse, portEcouteTARE);
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            socketRetour.send(msgRetour);
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'envoi du message : " + e);
+            System.exit(0);
+        }
+    }
+
     // todo : fusionner confirmationAchat et demandeConfirmationAddEnergieAMI
     private static String confirmationAchat(String string) {
         // se connecte en TCP au serveur AMI pour l'informer de l'achat d'un bloc
         // energie
         // recupere l'objet energie en fonction du numero indiqué
 
-        Energie energie = offres[Integer.parseInt(string)];
+        Energie energie = offres.get(Integer.parseInt(string) - 1);
 
         // Création de la socket
         Socket socket = null;
@@ -260,9 +294,7 @@ public class MARCHE {
     private static String getListeOffres() {
         String tmp = "";
         for (int i = 0; i < nombreDoffres; i++) {
-            System.out.println("position : " + i);
-            System.out.println(offres[i].toStringLimite());
-            tmp += offres[i].toStringLimite();
+            tmp += i + " : "+offres.get(i).toStringLimite();
         }
         return tmp;
     }
@@ -320,7 +352,7 @@ public class MARCHE {
         return message;
     }
 
-    public static Energie[] getOffres() {
+    public static ArrayList<Energie> getOffres() {
         return offres;
     }
 

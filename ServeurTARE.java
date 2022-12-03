@@ -71,7 +71,7 @@ public class ServeurTARE {
         // cree un objet JSON pour faire une requete au MARCHE avec le champ "requete"
         JSONObject requete = new JSONObject();
         requete.put("requete", "achat");
-
+        requete.put("numEnergie", ""+numEnergie);
         System.out.println("requete créee : " + requete.toString());
         // Création de la socket
         DatagramSocket socket = null;
@@ -188,8 +188,6 @@ public class ServeurTARE {
             System.out.println("attente de reponse");
             socketReponse.receive(msgR);
             reponse = new String(msgR.getData(), 0, msgR.getLength());
-            System.out.println("recu " + reponse);
-
         } catch (IOException e) {
             System.err.println("Erreur lors de la réception du message : " + e);
             System.exit(0);
