@@ -15,6 +15,8 @@ import java.net.SocketException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
+
 import org.json.JSONObject;
 
 public class MARCHE {
@@ -31,7 +33,34 @@ public class MARCHE {
     public static int portEcouteAMI = 5001;
 
     public static void main(String[] args) {
+        boolean finSession = false;
+        while (!finSession) {
+            System.out.println("Interface Marché de GROS");
+            System.out.println("1. Se mettre en attente de PONE");
+            System.out.println("2. Se mettre en attente de TARE");
+            System.out.println("3. Quitter");
+            // get an int value from user in console
+            int t = new Scanner(System.in).nextInt();
+            switch (t) {
+                case 1:
+                    System.out.println("En attente ...");
+                    ouvreSocketPONE();
+                    System.out.println("socket fermé");
+                    break;
+                case 2:
+                    System.out.println("En attente ...");
+                    ouvreSocketTARE();
+                    System.out.println("socket fermé");
+                    break;
+                case 3:
+                    finSession = true;
+                    break;
+            }
+        }
 
+    }
+
+    private static void ouvreSocketPONE() {
         // Création de la socket
         DatagramSocket socket = null;
         try {
@@ -77,9 +106,6 @@ public class MARCHE {
         }
 
         socket.close();
-
-        ouvreSocketTARE();
-
     }
 
     private static void ouvreSocketTARE() {
@@ -129,6 +155,13 @@ public class MARCHE {
 
                     break;
                 case "achat":
+                    // demande confirmation à l'AMI
+                    String numEnergie = obj.getString("numEnergie");
+                    confirmationAchat(numEnergie);
+                    // puis retire l'energie tu tableau et decremente le nbr d'offres
+                    
+                    // offres[Integer.parseInt(numEnergie)].remove();
+
                     break;
                 default:
                     break;
@@ -140,6 +173,64 @@ public class MARCHE {
             System.exit(0);
         }
 
+    }
+
+    // todo : fusionner confirmationAchat et demandeConfirmationAddEnergieAMI
+    private static String confirmationAchat(String string) {
+        // se connecte en TCP au serveur AMI pour l'informer de l'achat d'un bloc
+        // energie
+        // recupere l'objet energie en fonction du numero indiqué
+
+        Energie energie = offres[Integer.parseInt(string)];
+
+        // Création de la socket
+        Socket socket = null;
+        try {
+            socket = new Socket("localhost", portEcouteAMI);
+        } catch (UnknownHostException e) {
+            System.err.println("Erreur sur l'hôte : " + e);
+            System.exit(0);
+        } catch (IOException e) {
+            System.err.println("Création de la socket impossible : " + e);
+            System.exit(0);
+        }
+
+        // Association d'un flux d'entrée et de sortie
+        BufferedReader input = null;
+        PrintWriter output = null;
+        try {
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            output = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        } catch (IOException e) {
+            System.err.println("Association des flux impossible : " + e);
+            System.exit(0);
+        }
+
+        // Envoi de la nouvelle energie à faire verifier sous forme de JSON
+        System.out.println("Envoi: " + energie.toJson().toString());
+        output.println("2" + energie.toJson().toString());
+
+        String message = "";
+        // Lecture de 'confirmation'
+        try {
+            message = input.readLine();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la lecture : " + e);
+            System.exit(0);
+        }
+        System.out.println("Lu: " + message);
+        // Fermeture des flux et de la socket
+        try {
+            input.close();
+            output.close();
+            socket.close();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la fermeture des flux et de la socket : " + e);
+            System.exit(0);
+        }
+
+        // renvois la reponse de l'AMI
+        return message;
     }
 
     private static void envoisListeEnergies(DatagramSocket socketRetour) {

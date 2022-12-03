@@ -16,8 +16,19 @@ import org.json.JSONException;
 public class ServeurAMI {
 
     public static final int portEcoute = 5001;
+    public static JSONObject listeAchats = new JSONObject();
 
     public static void main(String[] args) {
+
+        boolean finSession = false;
+        while (!finSession) {
+            System.out.println("AMI en attente ...");
+            metAMIenAttente();
+        }
+
+    }
+
+    private static void metAMIenAttente() {
         // Création de la socket serveur
         ServerSocket socketServeur = null;
         try {
@@ -47,7 +58,7 @@ public class ServeurAMI {
             System.exit(0);
         }
 
-        // Lecture du prix
+        // Lecture de la demande
         String message = "";
         try {
             message = input.readLine();
@@ -60,10 +71,13 @@ public class ServeurAMI {
         // recupere quel est le type d'information qui est recu
         String typeInfo = message.substring(0, 1);
 
+        /*
+         * 1 : validite nouvelle Energie
+         * 2 : achat effectué
+         */
         switch (typeInfo) {
             case "1":
                 // Envoi de validité
-
 
                 // transforme le string en json en energie
                 JSONObject json = new JSONObject(message.substring(1));
@@ -73,24 +87,33 @@ public class ServeurAMI {
                 System.out.println("Envoi: " + val);
                 output.println(val);
                 break;
+            case "2":
+            //ajoute le nouvel achat à l'historique
+                JSONObject jsonTmp = new JSONObject(message.substring(1));
+                listeAchats.put("achat", jsonTmp);
+                //ne fait pas de verification quand un achat est effectué
+                output.println("Valide");
+                break;
             default:
                 output.println("pas de traitement possible");
                 break;
         }
 
-        // Lecture de fin transaction
-        try {
-            message = input.readLine();
-        } catch (IOException e) {
-            System.err.println("Erreur lors de la lecture : " + e);
-            System.exit(0);
-        }
-        System.out.println("Lu: " + message);
-
-        // Envoi de transaction terminée
-        message = "transaction terminée";
-        System.out.println("Envoi: " + message);
-        output.println(message);
+        /*
+         * // Lecture de fin transaction
+         * try {
+         * message = input.readLine();
+         * } catch (IOException e) {
+         * System.err.println("Erreur lors de la lecture : " + e);
+         * System.exit(0);
+         * }
+         * System.out.println("Lu: " + message);
+         * 
+         * // Envoi de transaction terminée
+         * message = "transaction terminée";
+         * System.out.println("Envoi: " + message);
+         * output.println(message);
+         */
 
         // Fermeture des flux et des sockets
         try {
@@ -106,7 +129,8 @@ public class ServeurAMI {
 
     public static String validite(Energie energie) {
         // todo : verifier que toutes les informations sont ok
-        //todo : verifier que ca correspond au code suivi (faire une methode utilitaire pour ça, qui verifie avec une table de correspondance ce qui est possible)
+        // todo : verifier que ca correspond au code suivi (faire une methode utilitaire
+        // pour ça, qui verifie avec une table de correspondance ce qui est possible)
         String valid = "Invalide";
         if (energie.getPrix() < 1000) {
             valid = "Valide";
