@@ -144,11 +144,9 @@ public class MARCHE {
 
     private static void envoisListeEnergies(DatagramSocket socketRetour) {
         try {
-          
-
 
             String listeTMP = getListeOffres();
-            System.out.println("avant envois infos \n"+listeTMP);
+            System.out.println("avant envois infos \n" + listeTMP);
             byte[] donnees = listeTMP.getBytes();
             InetAddress adresse = InetAddress.getByName("localhost");
             DatagramPacket msgRetour = new DatagramPacket(donnees, donnees.length,
@@ -169,11 +167,11 @@ public class MARCHE {
     }
 
     private static String getListeOffres() {
-        String tmp="";
-        for ( int i =0;i<nombreDoffres;i++) {
-            System.out.println("position : "+i);
+        String tmp = "";
+        for (int i = 0; i < nombreDoffres; i++) {
+            System.out.println("position : " + i);
             System.out.println(offres[i].toStringLimite());
-            tmp+=offres[i].toStringLimite();
+            tmp += offres[i].toStringLimite();
         }
         return tmp;
     }
