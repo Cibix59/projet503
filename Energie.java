@@ -1,5 +1,8 @@
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.json.JSONObject;
 
@@ -24,6 +27,7 @@ public class Energie implements Serializable {
 
     public void setQuantite(int quantite) {
         this.quantite = quantite;
+        codeSuivi.setQuantite(intToString(quantite,4));
     }
 
     public String getTypeEnergie() {
@@ -32,6 +36,7 @@ public class Energie implements Serializable {
 
     public void setTypeEnergie(String typeEnergie) {
         this.typeEnergie = typeEnergie;
+        this.codeSuivi.setCodePone(typeEnergie);
     }
 
     public int getPrix() {
@@ -48,7 +53,10 @@ public class Energie implements Serializable {
 
     public void setPays(String pays) {
         this.pays = pays;
+
     }
+
+
 
     public Energie(String codeSuivi, int quantite, String typeEnergie, int prix, String pays) {
 
@@ -57,6 +65,47 @@ public class Energie implements Serializable {
         this.typeEnergie = typeEnergie;
         this.prix = prix;
         this.pays = pays;
+    }
+    public Energie(int quantite, String typeEnergie, int prix, String pays) {
+        this.quantite = quantite;
+        this.typeEnergie = typeEnergie;
+        this.prix = prix;
+        this.pays = pays;
+        this.codeSuivi= new CodeDeSuivi("000100000000000100101000100001");
+        this.codeSuivi = new CodeDeSuivi(generationCodeSuivi(this));
+    }
+
+    private String intToString(int nombre,int taille){
+        String nombreString = Integer.toString(nombre);
+        while(nombreString.length() < taille){
+            nombreString = "0" + nombreString;
+        }
+        return nombreString;
+    }
+
+
+
+    private String generationCodeSuivi(Energie energie) {
+        //todo : generer automatiquement le code de suivi
+        String codeTMP ="";
+        codeTMP += intToString(energie.getQuantite(),4);
+        //
+        DateFormat format = new SimpleDateFormat("ddMMyyHHmm");
+        Date date = new Date();
+        System.out.println();
+        codeTMP += format.format(date)+"01";
+        
+        codeTMP += intToString(verifCodeDeSuivi.getIntFromPays(energie.getPays()), 4);
+
+        codeTMP += intToString(verifCodeDeSuivi.getIntFromType(energie.getTypeEnergie()), 3);
+
+
+        codeTMP+= this.getCodeSuivi().gettare();
+
+        //pone
+        codeTMP += this.codeSuivi.getrevendeur();
+
+        return codeTMP;
     }
 
     public JSONObject toJson() {
@@ -84,6 +133,11 @@ public class Energie implements Serializable {
 
     public String toStringLimite(){
         return  this.typeEnergie + " ("+this.pays+") : "+ this.quantite + " unites; prix : " +   this.prix + " euros "  ;
+    }
+
+    public void setCodePone(String nomPONE) {
+        String codePone = nomPONE.substring(nomPONE.length() - 6);
+        codeSuivi.setCodePone(codePone);
     }
 
 }

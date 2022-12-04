@@ -31,13 +31,13 @@ public class ClientPONE_UDP {
     public static int portEcoute = 3031;
 
     public static void main(String[] args) {
-        
+
         Random rng = new Random();
         String characters = "01";
-        String nomTARE = "TARE" + generateString(rng, characters, 16);
+        String nomPONE = "PONE" + generateString(rng, characters, 6);
         boolean finSession = false;
         while (!finSession) {
-            System.out.println("Interface TARE : " + nomTARE);
+            System.out.println("Interface PONE : " + nomPONE);
             System.out.println("1. Ajouter une énergie");
             System.out.println("2. Quitter");
             // get an int value from user in console
@@ -45,7 +45,7 @@ public class ClientPONE_UDP {
             switch (t) {
                 case 1:
                     // Création de l'energie
-                    Energie energie = new Energie("000100000000000100101000100001", 10, "charbon", 150, "France");
+                    Energie energie = genererEnergie(nomPONE);
                     ajoutEnergie(energie);
                     break;
                 case 2:
@@ -54,6 +54,50 @@ public class ClientPONE_UDP {
             }
         }
 
+    }
+
+    private static Energie genererEnergie(String nomPONE) {
+        boolean creationEnergie = false;
+        // generation par defaut
+        Energie energie = new Energie(0, "Biomasse", 0, "France");
+        energie.setCodePone(nomPONE);
+        while (!creationEnergie) {
+            System.out.println("Creation energie : " + energie.toString());
+            System.out.println("1. Quantite");
+            System.out.println("2. Type");
+            System.out.println("3. Prix");
+            System.out.println("4. Pays");
+            System.out.println("5. Valider");
+            int t = new Scanner(System.in).nextInt();
+            String u="";
+            int v;
+            switch (t) {
+                case 1:
+                    v = new Scanner(System.in).nextInt();
+                    energie.setQuantite(v);
+                    break;
+                case 2:
+                    
+                     u = new Scanner(System.in).nextLine();
+                    energie.setTypeEnergie(u);
+                    break;
+                case 3:
+                    // Création de l'energie
+                     v = new Scanner(System.in).nextInt();
+                    energie.setPrix(v);
+                    break;
+                case 4:
+                    // Création de l'energie
+                     u = new Scanner(System.in).nextLine();
+                    energie.setPays(u);
+                    break;
+                case 5:
+                    creationEnergie = true;
+                    break;
+            }
+        }
+
+        return energie;
     }
 
     public static void ajoutEnergie(Energie energie) {

@@ -12,6 +12,28 @@ public class CodeDeSuivi  implements Comparable<CodeDeSuivi>, Serializable {
     private String revendeur;
     private String quantite;
     private String numCommande;
+
+    public void setCodePone(String codePone){
+        this.revendeur=codePone;
+    }
+    public void setLieu(String lieu){
+        this.lieu=lieu;
+    }
+    public void setEnergie(String energie){
+        this.energie=energie;
+    }
+    public void setTare(String tare){
+        this.tare=tare;
+    }
+    public void setRevendeur(String revendeur){
+        this.revendeur=revendeur;
+    }
+    public void setQuantite(String quantite){
+        this.quantite=quantite;
+    }
+    public void setNumCommande(String numCommande){
+        this.numCommande=numCommande;
+    }
     
     public CodeDeSuivi(String lieu , String energie , String tare , String revendeur , String quantite , String numCommande) {
         this.lieu = lieu ;
