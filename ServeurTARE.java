@@ -43,7 +43,7 @@ public class ServeurTARE {
         boolean finSession = false;
         while (!finSession) {
             System.out.println("Interface TARE");
-            System.out.println("1. Demander la lsite des offres");
+            System.out.println("1. Demander la liste des offres");
             System.out.println("2. Faire un achat");
             System.out.println("3. Quitter");
             int t = new Scanner(System.in).nextInt();
@@ -65,6 +65,16 @@ public class ServeurTARE {
             }
         }
 
+    }
+
+
+    private static int[] getListeNumOffres(int qte,String type){
+        int[] listeNumOffres = new int [100];
+
+
+
+
+        return listeNumOffres;
     }
 
     private static void faitAchat(int numEnergie) {
@@ -198,5 +208,5 @@ public class ServeurTARE {
         return reponse;
 
     }
-
+    
 }

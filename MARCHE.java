@@ -151,7 +151,10 @@ public class MARCHE {
             switch (obj.getString("requete")) {
                 case "inscription":
                 case "miseEnVente":
-                case "retrait":
+                case "listeNumEnergies":
+                    System.out.println("consultation numEnergie");
+                    envoisListeNumOffres(socketRetour,obj.getInt("qte"),obj.getString("type"));
+                    break;
                 case "consultation":
                     System.out.println("consultation demandée");
                     envoisListeEnergies(socketRetour);
@@ -291,12 +294,60 @@ public class MARCHE {
         }
     }
 
+    private static void envoisListeNumOffres(DatagramSocket socketRetour, int qte, String type) {
+        try {
+
+            int[] listeTMP = getListeNumOffres(qte, type);
+
+            // Transformation en tableau d'octets
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(listeTMP);
+            } catch (IOException e) {
+                System.err.println("Erreur lors de la sérialisation : " + e);
+                System.exit(0);
+            }
+
+            byte[] donnees = baos.toByteArray();
+            InetAddress adresse = InetAddress.getByName("localhost");
+            DatagramPacket msgRetour = new DatagramPacket(donnees, donnees.length,
+                    adresse, portEcouteTARE+1);
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            socketRetour.send(msgRetour);
+
+            /* socket.send(getDataOffres()); */
+            System.out.println("apres envois infos");
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'envoi du message : " + e);
+            System.exit(0);
+        }
+    }
+
     private static String getListeOffres() {
         String tmp = "";
         for (int i = 0; i < nombreDoffres; i++) {
-            tmp += i + " : "+offres.get(i).toStringLimite();
+            tmp += i + " : " + offres.get(i).toStringLimite();
         }
         return tmp;
+    }
+
+    private static int[] getListeNumOffres(int qte, String type) {
+        int[] listeNumOffres = new int[nombreDoffres];
+        int qteRestante = qte;
+        int j = 0;
+        for (int i = 0; i < nombreDoffres && qteRestante > 0; i++) {
+            if (offres.get(i).getTypeEnergie() == type) {
+                qteRestante -= offres.get(i).getQuantite();
+                listeNumOffres[j] = i;
+                j++;
+            }
+        }
+        return listeNumOffres;
     }
 
     public static String demandeConfirmationAddEnergieAMI(Energie energie) {
